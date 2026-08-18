@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Summarizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #10b981;
+    --primary-light: #34d399;
+    --primary-dark: #059669;
+    --danger: #ef4444;
+    --dark: #1f2937;
+    --gray: #6b7280;
+    --gray-light: #e5e7eb;
+    --border-radius: 18px;
+    --shadow-sm: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-md: 0 15px 40px rgba(0,0,0,0.12);
+    --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: white;
+    min-height: 100vh;
+    padding: 20px;
+    color: #1e293b;
+    line-height: 1.7;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 80%, #10b98122 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, #8b5cf622 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, #06b6d422 0%, transparent 60%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 40px auto;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  header {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    padding: 60px 30px;
+    text-align: center;
+  }
+
+  header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+  }
+
+  header p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    font-weight: 500;
+  }
+
+  .tabs { display: flex; background: #f8fafc; }
+  .tab {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #64748b;
+    transition: var(--transition);
+    position: relative;
+  }
+  .tab.active { color: var(--primary); background: white; }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+
+  .content { padding: 48px; background: white; }
+
+  .form-container { display: none; animation: fadeIn 0.5s ease-out; }
+  .form-container.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+  label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 1.05rem;
+  }
+
+  .file-upload input[type="file"] {
+    width: 100%;
+    padding: 70px 20px;
+    background: #f8fafc url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2310b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>') no-repeat center 34px;
+    background-size: 64px;
+    border: 3px dashed #94a3b8;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1.15rem;
+    text-align: center;
+    color: #64748b;
+    transition: var(--transition);
+  }
+  .file-upload input[type="file"]:hover {
+    border-color: var(--primary);
+    background-color: #ecfdf5;
+    transform: translateY(-2px);
+  }
+
+  .url-input {
+    width: 100%;
+    padding: 18px 22px;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    transition: var(--transition);
+  }
+  .url-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.15);
+  }
+
+  .btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    border-radius: var(--border-radius);
+    font-size: 1.15rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.45);
+  }
+
+  /* BEAUTIFUL PARAGRAPHED SUMMARY AREA */
+  .result-container {
+    margin-top: 48px;
+    padding: 44px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
+    border-left: 8px solid var(--primary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    line-height: 1.8;
+  }
+
+  .result-container h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .summary-content {
+    font-size: 1.15rem;
+    color: #1f2937;
+  }
+
+  .summary-content > p {
+    margin-bottom: 1.6em;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  .summary-content > p:first-of-type::first-letter {
+    font-size: 4.2rem;
+    font-weight: 800;
+    float: left;
+    margin-right: 14px;
+    line-height: 1;
+    color: var(--primary);
+    padding-top: 6px;
+  }
+
+  .summary-content ul,
+  .summary-content ol {
+    margin: 1.4em 0;
+    padding-left: 2em;
+  }
+
+  .summary-content li {
+    margin-bottom: 0.6em;
+  }
+
+  .summary-content strong {
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+
+  .error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    border-left: 5px solid var(--danger);
+    font-weight: 600;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 50px 20px; }
+    header h1 { font-size: 2.4rem; }
+    .content { padding: 32px 20px; }
+    .result-container { padding: 32px 24px; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Smart Summarizer</h1>
+    <p>Instantly distill long articles, PDFs, or text files into clear, concise summaries</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="file">Upload File</div>
+    <div class="tab" data-tab="url">Web Article</div>
+  </div>
+
+  <div class="content">
+    
+    <div class="form-container active" id="file-form">
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="input_type" value="file">
+        <div class="input-group">
+          <label>Choose a file to summarize</label>
+          <div class="file-upload">
+            <input type="file" name="file" accept=".txt,.pdf" required>
+          </div>
+          <small style="color:#64748b;margin-top:10px;display:block;">Supported: .txt and .pdf files</small>
+        </div>
+        <button type="submit" class="btn">Generate Summary</button>
+      </form>
+    </div>
+
+    <div class="form-container" id="url-form">
+      <form method="POST">
+        <input type="hidden" name="input_type" value="url">
+        <div class="input-group">
+          <label>Paste article URL</label>
+          <input type="url" name="url" class="url-input" placeholder="https://example.com/long-article" required>
+        </div>
+        <button type="submit" class="btn">Generate Summary</button>
+      </form>
+    </div>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if summary %}
+    <div class="result-container">
+      <h3>Your AI Summary</h3>
+      <div class="summary-content">
+        {{ summary | replace("\n\n", "</p><p>") | replace("\n", "</p><p>") | safe }}
+        <!-- This Jinja magic converts double/triple newlines → proper <p> tags -->
+        <!-- Works perfectly with GPT, Claude, Gemini outputs -->
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('.tab');
+    const fileForm = document.getElementById('file-form');
+    const urlForm = document.getElementById('url-form');
+
+    const hasSummary = !!document.querySelector('.result-container');
+    const hasError = !!document.querySelector('.error');
+    const urlInput = document.querySelector('input[name="url"]');
+    const wasUrl = urlInput && urlInput.value.trim() !== '';
+
+    let active = (hasSummary || hasError) && wasUrl ? 'url' : 'file';
+
+    tabs.forEach(t => t.classList.remove('active'));
+    [fileForm, urlForm].forEach(f => f.classList.remove('active'));
+    document.querySelector(`.tab[data-tab="${active}"]`).classList.add('active');
+    document.getElementById(active + '-form').classList.add('active');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function () {
+        const target = this.dataset.tab;
+        tabs.forEach(t => t.classList.remove('active'));
+        [fileForm, urlForm].forEach(f => f.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(target + '-form').classList.add('active');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

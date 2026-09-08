@@ -26,16 +26,56 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 llm = ChatGroq(model_name="openai/gpt-oss-20b", groq_api_key=groq_api_key)
 
 # Prompts & Chains
+
 map_prompt = PromptTemplate.from_template(
-    """Summarize these text excerpt in 1-2 sentences. Focus on key events, characters, and themes—avoid spoilers.
-    Excerpt: {text}
-    Summary:"""
+    """You are an expert summarization assistant.
+
+Summarize the following text excerpt in 1-2 concise sentences.
+
+Focus only on the most important information in the excerpt, including key
+events, characters, ideas, conflicts, or themes. Avoid unnecessary details,
+repetition, and spoilers.
+
+Do not introduce information that is not present in the excerpt.
+
+Excerpt:
+{text}
+
+Summary:"""
 )
+
 reduce_prompt = PromptTemplate.from_template(
-    """Combine these book summaries into one cohesive 200-word overview. Keep it engaging and spoiler-free. Do it in 2 paragraphs
-    Summaries:
-    {summaries}
-    Combined Summary:"""
+    """You are an expert summarization assistant.
+
+Using the summaries provided below, create one cohesive, engaging,
+spoiler-free summary of the book.
+
+Organize the final response into exactly these three sections:
+
+MAIN IDEA
+Explain the central idea, purpose, or overall subject of the book in 1-2
+clear sentences.
+
+KEY POINTS
+List the 3-7 most important ideas, events, themes, or takeaways from the
+book. Keep each point concise and avoid repetition.
+
+BOTTOM LINE
+Give a brief 1-2 sentence conclusion explaining what the reader should
+ultimately understand or take away from the book.
+
+IMPORTANT INSTRUCTIONS:
+- Keep the entire response around 200 words.
+- Do not reveal major plot twists or the ending.
+- Do not invent information that is not supported by the summaries.
+- Preserve important characters, ideas, themes, and events when relevant.
+- Use clear, natural, engaging language.
+- Do not add any sections other than Main Idea, Key Points, and Bottom Line.
+
+Summaries:
+{summaries}
+
+Final Summary:"""
 )
 
 map_chain = map_prompt | llm | StrOutputParser()
